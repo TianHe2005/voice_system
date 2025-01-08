@@ -14,8 +14,22 @@ import subprocess
 from datetime import timedelta, datetime
 import threading
 import queue
+import json
 from modelscope.pipelines import pipeline
 
+from modelscope.utils.constant import Tasks
+
+
+inference_pipeline_2 = pipeline(
+    task=Tasks.auto_speech_recognition,
+    model='iic/speech_paraformer-large-vad-punc_asr_nat-zh-cn-16k-common-vocab8404-pytorch',
+    model_revision="v2.0.4")
+
+
+
+inference_pipeline = pipeline(
+    task=Tasks.emotion_recognition,
+    model="iic/emotion2vec_plus_large")
 
 
 sv_pipeline = pipeline(
@@ -36,6 +50,7 @@ spk_model_path = os.path.join(home_directory, ".cache", "modelscope", "hub", "ii
 spk_model_revision = "v2.0.4"
 spk2_model_path = os.path.join(home_directory, ".cache", "modelscope", "hub", "iic", "speech_eres2net_sv_zh-cn_16k-common")
 spk2_model_revision = "v2.0.4"
+
 
 
 
@@ -103,11 +118,19 @@ class Widget(QWidget):
         self.ui.pushButton_6.clicked.connect(self.start_transcription_thread)
         self.ui.pushButton_7.clicked.connect(self.select_input_folder)
         self.ui.pushButton_8.clicked.connect(self.select_output_folder)
+        self.ui.pushButton_9.clicked.connect(self.qingganshibie)
         self.ui.pushButton_10.clicked.connect(self.process_files)
         self.ui.pushButton_11.clicked.connect(self.select_audio_file_1)
         self.ui.pushButton_12.clicked.connect(self.select_audio_file_2)
         self.ui.pushButton_13.clicked.connect(self.savepath)
         self.ui.pushButton_14.clicked.connect(self.process_folder)
+        self.ui.pushButton_15.clicked.connect(self.yuyingshibie)
+        self.ui.pushButton_16.clicked.connect(self.select_qingganaudio)
+        self.ui.pushButton_17.clicked.connect(self.savepath_qinggan)
+        self.ui.pushButton_18.clicked.connect(self.qidong_qinggan)
+        self.ui.pushButton_19.clicked.connect(self.select_yuyingaudio)
+        self.ui.pushButton_20.clicked.connect(self.savepath_yuying)
+        self.ui.pushButton_21.clicked.connect(self.qidong_yuying)
         self.selected_file_list = []
 
 
@@ -118,17 +141,37 @@ class Widget(QWidget):
         self.ui.widget_3.show()
         self.ui.widget_4.close()
         self.ui.tabWidget.close()
+        self.ui.widget_5.close()
+        self.ui.widget_6.close()
 
     def pretreatment_widget4(self):
         self.ui.widget_3.close()
         self.ui.widget_4.show()
         self.ui.tabWidget.close()
+        self.ui.widget_5.close()
+        self.ui.widget_6.close()
 
 
     def identify_tabwidget(self):
         self.ui.widget_3.close()
         self.ui.widget_4.close()
         self.ui.tabWidget.show()
+        self.ui.widget_5.close()
+        self.ui.widget_6.close()
+
+    def qingganshibie(self ):
+        self.ui.widget_3.close()
+        self.ui.widget_4.close()
+        self.ui.tabWidget.close()
+        self.ui.widget_5.show()
+        self.ui.widget_6.close()
+
+    def yuyingshibie(self):
+        self.ui.widget_3.close()
+        self.ui.widget_4.close()
+        self.ui.tabWidget.close()
+        self.ui.widget_5.close()
+        self.ui.widget_6.show()
 
     def select_multi_file(self):
         self.selected_file_list.clear()
@@ -271,6 +314,8 @@ class Widget(QWidget):
             # 将文件路径显示在标签上
             self.ui.label_4.setText(file_path)
 
+
+
     def select_audio_file_2(self):
         # 打开文件对话框选择文件夹
         folder_path = QFileDialog.getExistingDirectory(self, "选择文件夹", "")
@@ -348,7 +393,86 @@ class Widget(QWidget):
         else:
             QMessageBox.information(self, '信息', '条件不满足，未保存语音文件。')
 
+    def select_qingganaudio(self):
+        # 打开文件对话框选择音频文件
+        file_dialog = QFileDialog()
+        file_path, _ = file_dialog.getOpenFileName(self, "选择语音文件", "",
+                                                   "Audio Files (*.wav *.mp3 *.ogg);;All Files (*)")
 
+        if file_path:
+            # 将文件路径显示在标签上
+            self.ui.label_14.setText(file_path)
+    def savepath_qinggan(self):
+        folder_path = QFileDialog.getExistingDirectory(self, '选择文件夹')
+        if folder_path:
+            self.ui.label_15.setText(folder_path)
+
+    def qidong_qinggan(self):
+        audio1_path = self.ui.label_14.text()
+        rec_result = inference_pipeline(
+            [audio1_path],
+            granularity="utterance", extract_embedding=False)
+        print(rec_result)
+
+        # 获取 label_15 的文件夹路径
+        folder_path = self.ui.label_15.text()
+
+        # 获取 label_14 的文件名（不包括路径）
+        file_name = os.path.basename(audio1_path)
+        # 去掉文件扩展名，添加新的扩展名（例如 .txt）
+        base_name, _ = os.path.splitext(file_name)
+        output_file_name = f"{base_name}.txt"
+        output_file_path = os.path.join(folder_path, output_file_name)
+
+        # 确保文件夹存在
+        os.makedirs(folder_path, exist_ok=True)
+
+        # 将 rec_result 保存为文本文件
+        with open(output_file_path, 'w', encoding='utf-8') as file:
+            file.write(json.dumps(rec_result, ensure_ascii=False, indent=4))
+
+            QMessageBox.information(self, '信息', '文本文件已成功保存到指定文件夹！')
+
+    def select_yuyingaudio(self):
+        # 打开文件对话框选择音频文件
+        file_dialog = QFileDialog()
+        file_path, _ = file_dialog.getOpenFileName(self, "选择语音文件", "",
+                                                   "Audio Files (*.wav *.mp3 *.ogg);;All Files (*)")
+
+        if file_path:
+            # 将文件路径显示在标签上
+            self.ui.label_16.setText(file_path)
+
+    def savepath_yuying(self):
+        folder_path = QFileDialog.getExistingDirectory(self, '选择文件夹')
+        if folder_path:
+            self.ui.label_17.setText(folder_path)
+
+    def qidong_yuying(self):
+        audio1_path = self.ui.label_16.text()
+        rec_result = inference_pipeline_2(
+            [audio1_path],
+            granularity="utterance", extract_embedding=False)
+        print(rec_result)
+
+        # 获取 label_15 的文件夹路径
+        folder_path = self.ui.label_17.text()
+
+        # 获取 label_14 的文件名（不包括路径）
+        file_name = os.path.basename(audio1_path)
+        # 去掉文件扩展名，添加新的扩展名（例如 .txt）
+        base_name, _ = os.path.splitext(file_name)
+        output_file_name = f"{base_name}.txt"
+        output_file_path = os.path.join(folder_path, output_file_name)
+
+        # 确保文件夹存在
+        os.makedirs(folder_path, exist_ok=True)
+
+        # 将 rec_result 保存为文本文件
+        with open(output_file_path, 'w', encoding='utf-8') as file:
+            file.write(json.dumps(rec_result, ensure_ascii=False, indent=4))
+
+            QMessageBox.information(self, '信息', '文本文件已成功保存到指定文件夹！')
 
 def check_last_string(result):
     # 打印 result 结构以调试
