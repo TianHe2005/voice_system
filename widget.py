@@ -15,6 +15,7 @@ from datetime import timedelta, datetime
 import threading
 import queue
 import json
+from pydub import AudioSegment
 from modelscope.pipelines import pipeline
 
 from modelscope.utils.constant import Tasks
@@ -22,14 +23,16 @@ from modelscope.utils.constant import Tasks
 
 inference_pipeline_2 = pipeline(
     task=Tasks.auto_speech_recognition,
-    model='iic/speech_paraformer-large-vad-punc_asr_nat-zh-cn-16k-common-vocab8404-pytorch',
+    model='C:\\Users\\13714\\.cache\\modelscope\\hub\\iic\\speech_paraformer-large-vad-punc_asr_nat-zh-cn-16k-common-vocab8404-pytorch',
     model_revision="v2.0.4")
 
-
+inference_pipeline_3 = pipeline(
+    Tasks.acoustic_noise_suppression,
+    model='C:\\Users\\13714\\.cache\\modelscope\\hub\\iic\\speech_frcrn_ans_cirm_16k')
 
 inference_pipeline = pipeline(
     task=Tasks.emotion_recognition,
-    model="iic/emotion2vec_plus_large")
+    model='C:\\Users\\13714\\.cache\\modelscope\\hub\\iic\\emotion2vec_plus_large')
 
 
 sv_pipeline = pipeline(
@@ -131,6 +134,14 @@ class Widget(QWidget):
         self.ui.pushButton_19.clicked.connect(self.select_yuyingaudio)
         self.ui.pushButton_20.clicked.connect(self.savepath_yuying)
         self.ui.pushButton_21.clicked.connect(self.qidong_yuying)
+        self.ui.pushButton_22.clicked.connect(self.jiangzao)
+        self.ui.pushButton_24.clicked.connect(self.save_jiangzao)
+        self.ui.pushButton_23.clicked.connect(self.choose_jiangzao)
+        self.ui.pushButton_25.clicked.connect(self.qidong_jiangzao)
+        self.ui.pushButton_26.clicked.connect(self.shichangfenge)
+        self.ui.pushButton_27.clicked.connect(self.select_shichangfenge)
+        self.ui.pushButton_28.clicked.connect(self.save_shichangfenge)
+        self.ui.pushButton_29.clicked.connect(self.split_audio)
         self.selected_file_list = []
 
 
@@ -143,6 +154,8 @@ class Widget(QWidget):
         self.ui.tabWidget.close()
         self.ui.widget_5.close()
         self.ui.widget_6.close()
+        self.ui.widget_7.close()
+        self.ui.widget_8.close()
 
     def pretreatment_widget4(self):
         self.ui.widget_3.close()
@@ -150,6 +163,8 @@ class Widget(QWidget):
         self.ui.tabWidget.close()
         self.ui.widget_5.close()
         self.ui.widget_6.close()
+        self.ui.widget_7.close()
+        self.ui.widget_8.close()
 
 
     def identify_tabwidget(self):
@@ -158,6 +173,8 @@ class Widget(QWidget):
         self.ui.tabWidget.show()
         self.ui.widget_5.close()
         self.ui.widget_6.close()
+        self.ui.widget_7.close()
+        self.ui.widget_8.close()
 
     def qingganshibie(self ):
         self.ui.widget_3.close()
@@ -165,6 +182,8 @@ class Widget(QWidget):
         self.ui.tabWidget.close()
         self.ui.widget_5.show()
         self.ui.widget_6.close()
+        self.ui.widget_7.close()
+        self.ui.widget_8.close()
 
     def yuyingshibie(self):
         self.ui.widget_3.close()
@@ -172,6 +191,26 @@ class Widget(QWidget):
         self.ui.tabWidget.close()
         self.ui.widget_5.close()
         self.ui.widget_6.show()
+        self.ui.widget_7.close()
+        self.ui.widget_8.close()
+    def jiangzao(self):
+        self.ui.widget_3.close()
+        self.ui.widget_4.close()
+        self.ui.tabWidget.close()
+        self.ui.widget_5.close()
+        self.ui.widget_6.close()
+        self.ui.widget_7.show()
+        self.ui.widget_8.close()
+
+    def shichangfenge(self):
+        self.ui.widget_3.close()
+        self.ui.widget_4.close()
+        self.ui.tabWidget.close()
+        self.ui.widget_5.close()
+        self.ui.widget_6.close()
+        self.ui.widget_7.close()
+        self.ui.widget_8.show()
+
 
     def select_multi_file(self):
         self.selected_file_list.clear()
@@ -473,6 +512,102 @@ class Widget(QWidget):
             file.write(json.dumps(rec_result, ensure_ascii=False, indent=4))
 
             QMessageBox.information(self, '信息', '文本文件已成功保存到指定文件夹！')
+
+    def choose_jiangzao(self):
+        file_dialog = QFileDialog()
+        file_path, _ = file_dialog.getOpenFileName(self, "选择音频文件", "",
+                                                   "Audio Files (*.wav *.mp3 *.ogg);;All Files (*)")
+        if file_path:
+            self.ui.label_18.setText(file_path)
+
+    def save_jiangzao(self):
+        folder_path = QFileDialog.getExistingDirectory(self, '选择文件夹')
+        if folder_path:
+            self.ui.label_19.setText(folder_path)
+
+    def qidong_jiangzao(self):
+        audio1_path = self.ui.label_18.text()
+        rec_result = inference_pipeline_3(
+            [audio1_path],
+            granularity="utterance", extract_embedding=False)
+        print(rec_result)
+        # 获取 label_15 的文件夹路径
+        folder_path = self.ui.label_19.text()
+
+        # 获取 label_14 的文件名（不包括路径）
+        file_name = os.path.basename(audio1_path)
+        # 去掉文件扩展名，添加新的扩展名（例如 .txt）
+        base_name, _ = os.path.splitext(file_name)
+        output_file_name = f"{base_name}.txt"
+        output_file_path = os.path.join(folder_path, output_file_name)
+
+        # 确保文件夹存在
+        os.makedirs(folder_path, exist_ok=True)
+
+        # 将 rec_result 保存为文本文件
+        with open(output_file_path, 'w', encoding='utf-8') as file:
+            file.write(json.dumps(rec_result, ensure_ascii=False, indent=4))
+
+            QMessageBox.information(self, '信息', '文本文件已成功保存到指定文件夹！')
+
+    def select_shichangfenge(self):
+        file_dialog = QFileDialog()
+        file_path, _ = file_dialog.getOpenFileName(self, "选择音频文件", "",
+                                                   "Audio Files (*.wav *.mp3 *.ogg);;All Files (*)")
+        if file_path:
+            self.ui.label_20.setText(file_path)
+
+    def save_shichangfenge(self):
+        folder_path = QFileDialog.getExistingDirectory(self, '选择文件夹')
+        if folder_path:
+            self.ui.label_21.setText(folder_path)
+
+    def split_audio(self):
+        if not self.ui.label_20.text():
+            QMessageBox.warning(self, "警告", "请先选择一个音频文件。")
+            return
+
+        try:
+            duration_minutes = float(self.ui.lineEdit_5.text())
+            if duration_minutes <= 0:
+                raise ValueError("时长必须是正数。")
+        except ValueError:
+            QMessageBox.warning(self, "警告", "请输入一个有效的正数作为时长。")
+            return
+
+        segment_length_ms = int(duration_minutes * 60 * 1000)
+        output_folder = self.ui.label_21.text()
+
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+
+        try:
+            audio = AudioSegment.from_file(self.ui.label_20.text())
+            total_length = len(audio)
+            num_segments = total_length // segment_length_ms
+            if total_length % segment_length_ms != 0:
+                num_segments += 1
+
+            for i in range(num_segments):
+                start_time = i * segment_length_ms
+                end_time = (i + 1) * segment_length_ms
+                segment = audio[start_time:end_time]
+                output_file = os.path.join(output_folder, f"segment_{i + 1}.mp3")
+                segment.export(output_file, format="mp3")
+
+            self.ui.label_22.setText(f"音频已成功分割为 {num_segments} 段。")
+            QMessageBox.information(self, "成功", f"音频已成功分割为 {num_segments} 段。")
+        except Exception as e:
+            self.ui.label_22.setText(f"错误: {str(e)}")
+            QMessageBox.critical(self, "错误", f"发生错误: {str(e)}")
+
+
+
+
+
+
+
+
 
 def check_last_string(result):
     # 打印 result 结构以调试
