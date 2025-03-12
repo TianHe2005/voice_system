@@ -43,11 +43,11 @@ python widget.py
 
 ## 界面预览
 系统提供了直观的图形界面，方便用户操作：
-- 主界面：(https://github.com/TianHe2005/voice_system/blob/master/file/1.png)
-- 语音分割界面：(https://github.com/TianHe2005/voice_system/blob/master/file/2.png)
-- 说话人识别界面：(https://github.com/TianHe2005/voice_system/blob/master/file/3.png)
-- 情感识别界面：(https://github.com/TianHe2005/voice_system/blob/master/file/4.png)
-- 语音降噪界面：(https://github.com/TianHe2005/voice_system/blob/master/file/5.png)
+- 主界面：![1.png](https://github.com/TianHe2005/voice_system/blob/master/file/1.png)
+- 语音分割界面：![2](https://github.com/TianHe2005/voice_system/blob/master/file/2.png)
+- 说话人识别界面：![3](https://github.com/TianHe2005/voice_system/blob/master/file/3.png)
+- 情感识别界面：![4](https://github.com/TianHe2005/voice_system/blob/master/file/4.png)
+- 语音降噪界面：![5](https://github.com/TianHe2005/voice_system/blob/master/file/5.png)
 
 ## 核心模型介绍
 
